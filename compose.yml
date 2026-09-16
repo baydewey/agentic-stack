@@ -69,11 +69,13 @@ services:
     environment:
       HERMES_UID: ${HERMES_UID:-0}
       HERMES_GID: ${HERMES_GID:-0}
+      # Dashboard basic auth — diisi dari variable (jangan dari file mount)
+      HERMES_DASHBOARD_BASIC_AUTH_USERNAME: ${DASH_USER:-}
+      HERMES_DASHBOARD_BASIC_AUTH_PASSWORD_HASH: ${DASH_HASH:-}
 #    ports:
 #      - "9119:9119"
     volumes:
       - ./data/hermes:/opt/data
-      - ./config/dashboard.yaml:/opt/data/config.yaml
     dns:
       - 172.27.7.254
     networks:
