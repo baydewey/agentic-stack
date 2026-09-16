@@ -1,0 +1,87 @@
+services:
+  # ── 9Router: gateway multi-provider (OpenAI-compatible /v1) ────────────────
+  9router:
+    image: decolua/9router:latest
+    container_name: 9router
+    hostname: 9router
+    restart: unless-stopped
+    environment:
+      DATA_DIR: /app/data
+      PORT: "20128"
+      HOSTNAME: "0.0.0.0"
+      NODE_ENV: production
+      HEADROOM_URL: http://headroom:8787
+#    ports:
+#      - "20128:20128"
+    volumes:
+      - ./data/9router:/app/data
+    env_file:
+      - .env.9router
+    dns:
+      - 172.27.7.254
+    networks:
+      reverseproxy-nw:
+    depends_on:
+      - headroom
+
+  # ── Headroom: sidecar untuk token calculation ──────────────────────────────
+  headroom:
+    image: ghcr.io/chopratejas/headroom:latest
+    container_name: headroom
+    hostname: headroom
+    restart: unless-stopped
+#    ports:
+#      - "8787:8787"
+    dns:
+      - 172.27.7.254
+    networks:
+      reverseproxy-nw:
+
+  # ── Hermes Gateway: agent AI messaging gateway (Telegram, Discord, etc) ─────
+  hermes-gateway:
+    image: nousresearch/hermes-agent:latest
+    container_name: hermes-gateway
+    hostname: hermes-gateway
+    restart: unless-stopped
+    environment:
+      HERMES_UID: ${HERMES_UID:-0}
+      HERMES_GID: ${HERMES_GID:-0}
+      # API_SERVER_HOST: 0.0.0.0
+      # API_SERVER_KEY: (set di .env.hermes jika diaktifkan)
+#    ports:
+#      - "8000:8000"
+    volumes:
+      - ./data/hermes:/opt/data
+    env_file:
+      - .env.hermes
+    dns:
+      - 172.27.7.254
+    networks:
+      reverseproxy-nw:
+    command: ["gateway", "run"]
+
+  # ── Hermes Dashboard: web admin panel ─────────────────────────────────────
+  hermes-dashboard:
+    image: nousresearch/hermes-agent:latest
+    container_name: hermes-dashboard
+    hostname: hermes-dashboard
+    restart: unless-stopped
+    environment:
+      HERMES_UID: ${HERMES_UID:-0}
+      HERMES_GID: ${HERMES_GID:-0}
+#    ports:
+#      - "9119:9119"
+    volumes:
+      - ./data/hermes:/opt/data
+      - ./config/dashboard.yaml:/opt/data/config.yaml
+    dns:
+      - 172.27.7.254
+    networks:
+      reverseproxy-nw:
+    depends_on:
+      - hermes-gateway
+    command: ["dashboard", "--host", "0.0.0.0", "--port", "9119", "--no-open"]
+
+networks:
+  reverseproxy-nw:
+    external: true

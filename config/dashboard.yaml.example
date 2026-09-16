@@ -1,0 +1,8 @@
+# Hermes Dashboard Configuration
+# deploy.sh akan generate ini otomatis dengan password yang kamu pilih
+_config_version: 45
+
+dashboard:
+  basic_auth:
+    username: "YOUR_USERNAME"
+    password_hash: "scrypt$GENERATED$BY$DEPLOY$SH"
